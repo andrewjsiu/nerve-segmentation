@@ -4,11 +4,10 @@ import numpy as np
 from skimage.transform import resize
 from data import image_cols, image_rows
 
-
 def prep(img):
     img = img.astype('float32')
     img = (img > 0.5).astype(np.uint8)  # threshold
-    img = resize(img, (image_cols, image_rows), preserve_range=True, mode='reflect')
+    img = resize(img, (image_rows, image_cols), preserve_range=True, mode='constant')
     return img
 
 
@@ -42,15 +41,14 @@ def submission():
     argsort = np.argsort(imgs_id_test)
     imgs_id_test = imgs_id_test[argsort]
     imgs_test = imgs_test[argsort]
-
+    
     total = imgs_test.shape[0]
     ids = []
     rles = []
     for i in range(total):
-        img = imgs_test[i, 0]
+        img = imgs_test[i]
         img = prep(img)
         rle = run_length_enc(img)
-
         rles.append(rle)
         ids.append(imgs_id_test[i])
 
@@ -65,7 +63,6 @@ def submission():
         for i in range(total):
             s = str(ids[i]) + ',' + rles[i]
             f.write(s + '\n')
-
 
 if __name__ == '__main__':
     submission()

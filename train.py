@@ -7,6 +7,7 @@ import numpy as np
 from keras.models import Model
 # Keras has pre-built layers for building deep learning models
 from keras.layers import Input, concatenate, Convolution2D, MaxPooling2D, Conv2DTranspose
+from keras.layers import Dropout, BatchNormalization
 from keras.optimizers import Adam
 # Callbacks give a view on internal states and statistics of model during training
 from keras.callbacks import ModelCheckpoint 
@@ -16,8 +17,7 @@ from data import load_train_data, load_test_data
 
 K.set_image_data_format('channels_last')  # The default is TensorFlow
 
-img_rows = 96
-img_cols = 96
+img_rows, img_cols = 96, 96
 
 smooth = 1.
 
@@ -48,46 +48,91 @@ def get_unet():
     # padding='same' adds zero padding to produce output of the same size if stride is 1, 
     # (if padding='valid', no padding is added and excess columns/rows are dropped)
     # Apply a 3x3 convolution with 32 filters on a 96x96 image 
-    conv1 = Convolution2D(32, (3, 3), activation='relu', padding='same')(inputs)
-    conv1 = Convolution2D(32, (3, 3), activation='relu', padding='same')(conv1)
-    
+    conv1 = Convolution2D(32, (3, 3), activation='elu', padding='same', 
+                          kernel_initializer='he_normal', bias_initializer='zeros')(inputs)
+    conv1 = BatchNormalization(axis=1)(conv1)
+    conv1 = Convolution2D(32, (3, 3), activation='elu', padding='same',
+                          kernel_initializer='he_normal', bias_initializer='zeros')(conv1)
+    conv1 = BatchNormalization(axis=1)(conv1)
+
     # Pool layer: downsamples the spatial dimensions of the input
     # Apply max pooling operation with 2x2 receptive fields to discard 75% of activations
     # The maxpooling turns 96x96 image to 48x48 feature maps
     pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
-
-    conv2 = Convolution2D(64, (3, 3), activation='relu', padding='same')(pool1)
-    conv2 = Convolution2D(64, (3, 3), activation='relu', padding='same')(conv2)
+    pool1 = Dropout(0.5)(pool1)
+    
+    conv2 = Convolution2D(64, (3, 3), activation='elu', padding='same',
+                          kernel_initializer='he_normal', bias_initializer='zeros')(pool1)
+    conv2 = BatchNormalization(axis=1)(conv2)
+    conv2 = Convolution2D(64, (3, 3), activation='elu', padding='same',
+                          kernel_initializer='he_normal', bias_initializer='zeros')(conv2)
+    conv2 = BatchNormalization(axis=1)(conv2)
     pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
+    pool2 = Dropout(0.5)(pool2)
 
-    conv3 = Convolution2D(128, (3, 3), activation='relu', padding='same')(pool2)
-    conv3 = Convolution2D(128, (3, 3), activation='relu', padding='same')(conv3)
+    conv3 = Convolution2D(128, (3, 3), activation='elu', padding='same',
+                          kernel_initializer='he_normal', bias_initializer='zeros')(pool2)
+    conv3 = BatchNormalization(axis=1)(conv3)
+    conv3 = Convolution2D(128, (3, 3), activation='elu', padding='same',
+                          kernel_initializer='he_normal', bias_initializer='zeros')(conv3)
+    conv3 = BatchNormalization(axis=1)(conv3)
     pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
+    pool3 = Dropout(0.5)(pool3)
 
-    conv4 = Convolution2D(256, (3, 3), activation='relu', padding='same')(pool3)
-    conv4 = Convolution2D(256, (3, 3), activation='relu', padding='same')(conv4)
+    conv4 = Convolution2D(256, (3, 3), activation='elu', padding='same',
+                          kernel_initializer='he_normal', bias_initializer='zeros')(pool3)
+    conv4 = BatchNormalization(axis=1)(conv4)
+    conv4 = Convolution2D(256, (3, 3), activation='elu', padding='same',
+                          kernel_initializer='he_normal', bias_initializer='zeros')(conv4)
+    conv4 = BatchNormalization(axis=1)(conv4)
     pool4 = MaxPooling2D(pool_size=(2, 2))(conv4)
-
-    conv5 = Convolution2D(512, (3, 3), activation='relu', padding='same')(pool4)
-    conv5 = Convolution2D(512, (3, 3), activation='relu', padding='same')(conv5)
-
+    pool4 = Dropout(0.5)(pool4)
+    
+    conv5 = Convolution2D(512, (3, 3), activation='elu', padding='same',
+                          kernel_initializer='he_normal', bias_initializer='zeros')(pool4)
+    conv5 = BatchNormalization(axis=1)(conv5)
+    conv5 = Convolution2D(512, (3, 3), activation='elu', padding='same',
+                          kernel_initializer='he_normal', bias_initializer='zeros')(conv5)
+    conv5 = BatchNormalization(axis=1)(conv5)
+    conv5 = Dropout(0.5)(conv5)
+    
     # Transposed Convolution layer (Deconvolution): # of filters, (width, height) of filter,
     # Concatenate a list of inputs that have the same shape
     up6 = concatenate([Conv2DTranspose(256, (2, 2), strides=(2, 2), padding='same')(conv5), conv4], axis=3)
-    conv6 = Convolution2D(256, (3, 3), activation='relu', padding='same')(up6)
-    conv6 = Convolution2D(256, (3, 3), activation='relu', padding='same')(conv6)
+    conv6 = Convolution2D(256, (3, 3), activation='elu', padding='same',
+                          kernel_initializer='he_normal', bias_initializer='zeros')(up6)
+    conv6 = BatchNormalization(axis=1)(conv6)
+    conv6 = Convolution2D(256, (3, 3), activation='elu', padding='same',
+                          kernel_initializer='he_normal', bias_initializer='zeros')(conv6)
+    conv6 = BatchNormalization(axis=1)(conv6)
+    conv6 = Dropout(0.5)(conv6)
 
     up7 = concatenate([Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(conv6), conv3], axis=3)
-    conv7 = Convolution2D(128, (3, 3), activation='relu', padding='same')(up7)
-    conv7 = Convolution2D(128, (3, 3), activation='relu', padding='same')(conv7)
+    conv7 = Convolution2D(128, (3, 3), activation='elu', padding='same',
+                          kernel_initializer='he_normal', bias_initializer='zeros')(up7)
+    conv7 = BatchNormalization(axis=1)(conv7)
+    conv7 = Convolution2D(128, (3, 3), activation='elu', padding='same',
+                          kernel_initializer='he_normal', bias_initializer='zeros')(conv7)
+    conv7 = BatchNormalization(axis=1)(conv7)
+    conv7 = Dropout(0.5)(conv7)
 
     up8 = concatenate([Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(conv7), conv2], axis=3)
-    conv8 = Convolution2D(64, (3, 3), activation='relu', padding='same')(up8)
-    conv8 = Convolution2D(64, (3, 3), activation='relu', padding='same')(conv8)
+    conv8 = Convolution2D(64, (3, 3), activation='elu', padding='same',
+                          kernel_initializer='he_normal', bias_initializer='zeros')(up8)
+    conv8 = BatchNormalization(axis=1)(conv8)
+    conv8 = Convolution2D(64, (3, 3), activation='elu', padding='same',
+                          kernel_initializer='he_normal', bias_initializer='zeros')(conv8)
+    conv8 = BatchNormalization(axis=1)(conv8)
+    conv8 = Dropout(0.5)(conv8)
 
     up9 = concatenate([Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same')(conv8), conv1], axis=3)
-    conv9 = Convolution2D(32, (3, 3), activation='relu', padding='same')(up9)
-    conv9 = Convolution2D(32, (3, 3), activation='relu', padding='same')(conv9)
+    conv9 = Convolution2D(32, (3, 3), activation='elu', padding='same',
+                          kernel_initializer='he_normal', bias_initializer='zeros')(up9)
+    conv9 = BatchNormalization(axis=1)(conv9)
+    conv9 = Convolution2D(32, (3, 3), activation='elu', padding='same',
+                          kernel_initializer='he_normal', bias_initializer='zeros')(conv9)
+    conv9 = BatchNormalization(axis=1)(conv9)
+    conv9 = Dropout(0.5)(conv9)
 
     conv10 = Convolution2D(1, (1, 1), activation='sigmoid')(conv9)
 
@@ -138,7 +183,7 @@ def train_and_predict():
     print('-'*30)
     print('Fitting model...')
     print('-'*30)
-    model.fit(imgs_train, imgs_mask_train, batch_size=32, epochs=10, verbose=1, shuffle=True,
+    model.fit(imgs_train, imgs_mask_train, batch_size=32, epochs=20, verbose=1, shuffle=True,
               validation_split=0.2,
               callbacks=[model_checkpoint])
 
