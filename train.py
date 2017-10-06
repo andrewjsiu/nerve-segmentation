@@ -14,6 +14,7 @@ from keras.callbacks import ModelCheckpoint
 from keras import backend as K # handles low-level operations such as tensor products
 
 from data import load_train_data, load_test_data
+from augmentation import augmentation
 
 K.set_image_data_format('channels_last')  # The default is TensorFlow
 
@@ -148,7 +149,7 @@ def preprocess(imgs):
     """ Resize to image resolution to (img_rows, img_cols)"""
     imgs_p = np.ndarray((imgs.shape[0], img_rows, img_cols), dtype=np.uint8)
     for i in range(imgs.shape[0]):
-        imgs_p[i] = resize(imgs[i], (img_cols, img_rows), preserve_range=True, mode='reflect')
+        imgs_p[i] = resize(imgs[i], (img_rows, img_cols), preserve_range=True, mode='constant')
 
     # Increase the dimension of array 
     imgs_p = imgs_p[..., np.newaxis]
@@ -167,11 +168,13 @@ def train_and_predict():
     imgs_train = imgs_train.astype('float32')
     mean = np.mean(imgs_train)  # mean for data centering
     std = np.std(imgs_train)  # std for data normalization
-
     imgs_train = (imgs_train - mean) / std
 
     imgs_mask_train = imgs_mask_train.astype('float32')
     imgs_mask_train = imgs_mask_train / 255.  # scale masks to [0, 1]
+
+    # Augmenting images and masks
+    imgs_train, imgs_mask_train = augmentation(imgs_train, imgs_mask_train)
 
     print('-'*30)
     print('Creating and compiling model...')
@@ -207,6 +210,7 @@ def train_and_predict():
     imgs_mask_test = model.predict(imgs_test, verbose=1)
     np.save('imgs_mask_test.npy', imgs_mask_test)
 
+    """
     print('-' * 30)
     print('Saving predicted masks to files...')
     print('-' * 30)
@@ -216,7 +220,9 @@ def train_and_predict():
     for image, image_id in zip(imgs_mask_test, imgs_id_test):
         image = (image[:, :, 0] * 255.).astype(np.uint8)
         imsave(os.path.join(pred_dir, str(image_id) + '_pred.png'), image)
-
+    """
+    return model
+    
 # Execute only if it is run, not if it is imported
 if __name__ == '__main__':
     train_and_predict()
