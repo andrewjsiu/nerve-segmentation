@@ -45,7 +45,7 @@ For instance, patient 29 has 120 images with 7140 pairs (=120\*119/2). The pairw
  
 Within the set of similar pairs, the most different pair (29_110.tif and 29_80.tif) have a distance of 0.0079 and still appear to be quite similar in the images shown below. Both of their masks identify the presence of the BP nerves with a Dice coefficient of 0.49. In this case, we will keep both images since we do not know which mask is more accurate and the truth is perhaps somewhere in between. 
 
-<img src="https://github.com/andrewjsiu/nerve-segmentation/blob/master/images/similar.png" height="450">
+<img src="https://github.com/andrewjsiu/nerve-segmentation/blob/master/images/similar.png" height="425">
  
 To correct for all inconsitent images, we loop through all 47 patients in the training set and removed a total of 860 images that have empty masks and their similar images indicate the presence of the BP nerves. 
 
