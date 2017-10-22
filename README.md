@@ -27,7 +27,7 @@ Using the best baseline model, we check the predictions against the ground truth
 Moreover, there are dozens of cases like this for almost each of the 47 patients in the training set (each patient has about 120 ultrasound images for each patient). Such large instances of inconsistent labeling creates a rather low upper bound that any predictive models can achieve.
 
 **Image File Name: 29_32.tif**
-![alt text](https://github.com/andrewjsiu/nerve-segmentation/blob/master/images/mask29_32.png)
+<img src="https://github.com/andrewjsiu/nerve-segmentation/blob/master/images/mask29_32.png" height="110">
  
 **Image File Name: 29_76.tif** 
 ![alt text](https://github.com/andrewjsiu/nerve-segmentation/blob/master/images/mask29_76.png)
