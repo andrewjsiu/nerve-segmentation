@@ -41,11 +41,11 @@ Here we assume that when two images are very similar but their label masks are i
 We measure the similarity between two images by comparing their pixel value histograms as follows: Each image is divided into 21 x 29 blocks and the size of each block is 20 x 20 pixels. We then compute a histogram for each row of 29 blocks and concatenate all 21 histograms into one vector. For any pair of two images, we calculate the cosine distance between their two vectors of histograms. 
 For instance, patient 29 has 120 images with 7140 pairs (=120\*119/2). The pairwise distance is roughly normally distributed and slightly skewed to the right. We use the threshold of 0.008 to define the set of most similar pairs of images. For patient 29, the most similar pairs occupy about 1.4% of all pairs. 
 
-<img src="https://github.com/andrewjsiu/nerve-segmentation/blob/master/images/distances.png" height="375">
+<img src="https://github.com/andrewjsiu/nerve-segmentation/blob/master/images/distances.png" height="360">
  
 Within the set of similar pairs, the most different pair (29_110.tif and 29_80.tif) have a distance of 0.0079 and still appear to be quite similar in the images shown below. Both of their masks identify the presence of the BP nerves with a Dice coefficient of 0.49. In this case, we will keep both images since we do not know which mask is more accurate and the truth is perhaps somewhere in between. 
 
-<img src="https://github.com/andrewjsiu/nerve-segmentation/blob/master/images/similar.png" height="425">
+<img src="https://github.com/andrewjsiu/nerve-segmentation/blob/master/images/similar.png" height="450">
  
 To correct for all inconsitent images, we loop through all 47 patients in the training set and removed a total of 860 images that have empty masks and their similar images indicate the presence of the BP nerves. 
 
@@ -53,7 +53,7 @@ To correct for all inconsitent images, we loop through all 47 patients in the tr
 
 Removing inconsistent images makes the training set much cleaner but also reduces the number of inputs we feed into the model. One way to get more training data is to use data augmentation. For instance, we can flip a training image horizontally and add it as a new training example. We can also randomly rotate training images, shift them horizontally or vertically, and zoom in or out of them. For each augmented example, we apply the same transformation to the training image and its corresponding mask. Below is an example of augmented image and mask. Adding such augmented training images often help prevent overfitting and regularize the model. 
 
-<img src="https://github.com/andrewjsiu/nerve-segmentation/blob/master/images/augment.png" height="425">
+<img src="https://github.com/andrewjsiu/nerve-segmentation/blob/master/images/augment.png" height="400">
 
 ## Predicting the Presence of Target Nerves
 
