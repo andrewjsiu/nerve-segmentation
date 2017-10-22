@@ -6,8 +6,8 @@ from data import image_cols, image_rows
 
 def prep(img):
     img = img.astype('float32')
-    img = (img > 0.5).astype(np.uint8)  # threshold
     img = resize(img, (image_rows, image_cols), preserve_range=True, mode='constant')
+    img = (img > 0.5).astype(np.uint8)  # threshold
     return img
 
 
@@ -45,16 +45,21 @@ def submission():
     total = imgs_test.shape[0]
     ids = []
     rles = []
+    count = 0
     for i in range(total):
         img = imgs_test[i]
         img = prep(img)
+        if (np.sum(img) < 3500): # threshold for making the empty mask predictions
+            img = np.zeros((image_rows, image_cols))
+            count += 1
         rle = run_length_enc(img)
         rles.append(rle)
         ids.append(imgs_id_test[i])
 
-        if i % 100 == 0:
+        if i % 1000 == 0:
             print('{}/{}'.format(i, total))
 
+    print("Empty Masks: {} as {:.1f}%".format(count, count/total*100))
     first_row = 'img,pixels'
     file_name = 'submission.csv'
 

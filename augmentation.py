@@ -14,11 +14,11 @@ def augmentation(imgs, masks):
     print("Augmentation Model...")
     """ Generate batches of image data augmentation. The data will be looped over in batches."""
 
-    gen = ImageDataGenerator(rotation_range=10, # Degree range for random rotation
+    gen = ImageDataGenerator(#rotation_range=10, # Degree range for random rotation
                              width_shift_range=0.1, # Fraction of total width for random horizontal shift
                              height_shift_range=0.1, # Fraction of total height for random vertical shift
-                             shear_range=0.1, # Shear angle in counter-clockwise direction as radins
-                             zoom_range=0.1, # Zoom in or out within 10% range
+                             #shear_range=0.1, # Shear angle in counter-clockwise direction as radins
+                             #zoom_range=0.1, # Zoom in or out within 10% range
                              horizontal_flip=True, # Randomly flip inputs horizontally
                              fill_mode='nearest', # Points outside boundaries are filled
                              cval=0.)

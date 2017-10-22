@@ -49,14 +49,15 @@ def create_train_data():
     np.save('np_data/subjects_train.npy', subjects)
     np.save('np_data/imgs_train.npy', imgs)
     np.save('np_data/imgs_mask_train.npy', imgs_mask)
+    np.save('np_data/imgs_names.npy', images)
     print('Saving to .npy files done.')
 
 
 def load_train_data():
     imgs_train = np.load('np_data/imgs_train.npy')
     imgs_mask_train = np.load('np_data/imgs_mask_train.npy')
-    subjects = np.load('np_data/subjects_train.npy')
-    return imgs_train, imgs_mask_train, subjects
+    imgs_names = np.load('np_data/imgs_names.npy')
+    return imgs_train, imgs_mask_train, imgs_names
 
 
 def create_test_data():

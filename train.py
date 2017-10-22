@@ -7,20 +7,21 @@ import numpy as np
 from keras.models import Model
 # Keras has pre-built layers for building deep learning models
 from keras.layers import Input, concatenate, Convolution2D, MaxPooling2D, Conv2DTranspose
-from keras.layers import Dropout, BatchNormalization
+from keras.layers import Dropout, BatchNormalization, Dense, Flatten
 from keras.optimizers import Adam
 # Callbacks give a view on internal states and statistics of model during training
 from keras.callbacks import ModelCheckpoint 
 from keras import backend as K # handles low-level operations such as tensor products
 
 from data import load_train_data, load_test_data
+from cleaning import load_clean_data
 from augmentation import augmentation
 
 K.set_image_data_format('channels_last')  # The default is TensorFlow
 
 img_rows, img_cols = 96, 96
 
-smooth = 1.
+smooth = 1
 
 
 def dice_coef(y_true, y_pred):
@@ -97,6 +98,11 @@ def get_unet():
     conv5 = BatchNormalization(axis=1)(conv5)
     conv5 = Dropout(0.5)(conv5)
     
+    # Generate output to predict nerve presence as an auxiliary branch
+    pre = Convolution2D(1, (1, 1), activation='sigmoid', kernel_initializer='he_normal')(conv5)
+    pre = Flatten()(pre)
+    aux_out = Dense(1, activation='sigmoid', name='aux_output')(pre)
+    
     # Transposed Convolution layer (Deconvolution): # of filters, (width, height) of filter,
     # Concatenate a list of inputs that have the same shape
     up6 = concatenate([Conv2DTranspose(256, (2, 2), strides=(2, 2), padding='same')(conv5), conv4], axis=3)
@@ -135,12 +141,18 @@ def get_unet():
     conv9 = BatchNormalization(axis=1)(conv9)
     conv9 = Dropout(0.5)(conv9)
 
-    conv10 = Convolution2D(1, (1, 1), activation='sigmoid')(conv9)
+    conv10 = Convolution2D(1, (1, 1), activation='sigmoid',
+                           kernel_initializer='he_normal',
+                           name='main_output')(conv9)
 
-    # Create a model with input and output layers
-    # Use Adam optimzer evaluated by Dice Coefficient
-    model = Model(inputs=[inputs], outputs=[conv10])
-    model.compile(optimizer=Adam(lr=1e-5), loss=dice_coef_loss, metrics=[dice_coef])
+    # Create a model with input and two output layers
+    # Use Adam optimzer evaluated by Dice Coefficient on the main output and
+    # accuracy on the auxiliary output of predicting nerve presence
+    model = Model(inputs=[inputs], outputs=[conv10, aux_out])
+    model.compile(optimizer=Adam(lr=1e-5), 
+                  loss={'main_output': dice_coef_loss, 'aux_output': 'binary_crossentropy'},
+                  metrics={'main_output': dice_coef, 'aux_output': 'acc'},
+                  loss_weights={'main_output': 1., 'aux_output': 0.5})
 
     return model
 
@@ -160,7 +172,7 @@ def train_and_predict():
     print('-'*30)
     print('Loading and preprocessing train data...')
     print('-'*30)
-    imgs_train, imgs_mask_train, _ = load_train_data()
+    imgs_train, imgs_mask_train, _ = load_clean_data()
 
     imgs_train = preprocess(imgs_train)
     imgs_mask_train = preprocess(imgs_mask_train)
@@ -175,6 +187,9 @@ def train_and_predict():
 
     # Augmenting images and masks
     imgs_train, imgs_mask_train = augmentation(imgs_train, imgs_mask_train)
+    
+    # Get nerve presence indicators
+    presence = np.array([int(np.sum(imgs_mask_train[i]) > 0) for i in range(imgs_mask_train.shape[0])])
 
     print('-'*30)
     print('Creating and compiling model...')
@@ -186,7 +201,11 @@ def train_and_predict():
     print('-'*30)
     print('Fitting model...')
     print('-'*30)
-    model.fit(imgs_train, imgs_mask_train, batch_size=32, epochs=20, verbose=1, shuffle=True,
+    model.fit(imgs_train, [imgs_mask_train, presence], 
+              batch_size=128, 
+              epochs=20, 
+              verbose=1, 
+              shuffle=True,
               validation_split=0.2,
               callbacks=[model_checkpoint])
 
@@ -208,7 +227,8 @@ def train_and_predict():
     print('Predicting masks on test data...')
     print('-'*30)
     imgs_mask_test = model.predict(imgs_test, verbose=1)
-    np.save('imgs_mask_test.npy', imgs_mask_test)
+    np.save('imgs_mask_test.npy', imgs_mask_test[0])
+    np.save('exist_mask_test.npy', imgs_mask_test[1])
 
     """
     print('-' * 30)
