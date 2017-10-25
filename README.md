@@ -28,7 +28,7 @@ Moreover, there are dozens of cases like this for almost each of the 47 patients
 
 **Image File Name: 29_32.tif**
 
-<img src="https://s3.amazonaws.com/myelpdata/mask29_32.png" height="200">
+<img src="https://s3.amazonaws.com/myelpdata/mask29_32.PNG" height="200">
  
 **Image File Name: 29_76.tif** 
 
