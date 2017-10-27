@@ -59,7 +59,7 @@ Removing inconsistent images makes the training set much cleaner but also reduce
 
 After cleaning inconsistent data and applying data augmentation, the newly trained model still did not improve the overall score on the leaderboard by much. We then check the distribution of the training images based on the sum of positive predictions conditional on whether the BP nerves exist in image or not. When the sum of positive predictions in an image is zero, the model predicts that there are no BP nerves and the model correctly predicts the absence of nerves much more frequently than false negatives. However, the model also falsely predicts some positive pixel values when the BP nerves are absent, and these cases tend to decrease as the model predicts a higher sum of predicted values. 
 
-<img src="https://s3.amazonaws.com/myelpdata/predicted.png" height="425">
+<img src="https://s3.amazonaws.com/myelpdata/predicted.png" height="350">
 
 It turns out that if we convert any image with a predicted sum of pixel values that is less 3500 into an empty mask prediction, we can obtain a private leaderboard score of 0.66, which is a big improvement to our baseline model. 
 
