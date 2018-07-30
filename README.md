@@ -28,11 +28,11 @@ Moreover, there are dozens of cases like this for almost each of the 47 patients
 
 **Image File Name: 29_32.tif**
 
-<img src="https://s3.amazonaws.com/myelpdata/mask29_32.png" height="225">
+<img src="https://github.com/andrewjsiu/nerve-segmentation/blob/master/images/mask29_32.png" height="225">
  
 **Image File Name: 29_76.tif** 
 
-<img src="https://s3.amazonaws.com/myelpdata/mask29_76.png" height="225">
+<img src="https://github.com/andrewjsiu/nerve-segmentation/blob/master/images/mask29_76.png" height="225">
 
 ## Correcting Inconsistent Labels
 
